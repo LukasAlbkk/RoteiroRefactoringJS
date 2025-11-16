@@ -2,10 +2,13 @@ const { readFileSync } = require('fs');
 
 function gerarFaturaStr (fatura, pecas) {
 
-  function calcularTotalApresentacao(apre, peca) {
-    let total = 0;
+  function getPeca(apre) {
+    return pecas[apre.id];
+  }
 
-    switch (peca.tipo) {
+  function calcularTotalApresentacao(apre) {
+    let total = 0;
+    switch (getPeca(apre).tipo) {
       case "tragedia":
         total = 40000;
         if (apre.audiencia > 30) {
@@ -20,9 +23,8 @@ function gerarFaturaStr (fatura, pecas) {
         total += 300 * apre.audiencia;
         break;
       default:
-        throw new Error(`Peça desconhecia: ${peca.tipo}`);
+        throw new Error(`Peça desconhecia: ${getPeca(apre).tipo}`);
     }
-
     return total;
   }
 
@@ -34,14 +36,13 @@ function gerarFaturaStr (fatura, pecas) {
                           minimumFractionDigits: 2 }).format;
 
   for (let apre of fatura.apresentacoes) {
-    const peca = pecas[apre.id];
-    let total = calcularTotalApresentacao(apre, peca);
+    let total = calcularTotalApresentacao(apre);
 
     creditos += Math.max(apre.audiencia - 30, 0);
-    if (peca.tipo === "comedia") 
+    if (getPeca(apre).tipo === "comedia") 
        creditos += Math.floor(apre.audiencia / 5);
 
-    faturaStr += `  ${peca.nome}: ${formato(total/100)} (${apre.audiencia} assentos)\n`;
+    faturaStr += `  ${getPeca(apre).nome}: ${formato(total/100)} (${apre.audiencia} assentos)\n`;
     totalFatura += total;
   }
 
